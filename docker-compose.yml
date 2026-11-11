@@ -1,0 +1,62 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secret
+      MYSQL_USER: shorty
+      MYSQL_PASSWORD: shorty_secret
+      MYSQL_DATABASE: shorty
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_secret"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build: ./api
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: mysql+pymysql://shorty:shorty_secret@mysql:3306/shorty
+      REDIS_URL: redis://redis:6379/0
+      BASE_URL: http://localhost:5000
+      CORS_ORIGINS: http://localhost:5173
+      FLASK_DEBUG: "1"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./api:/app
+    # Dev override: auto-reload. The image's default command uses gunicorn.
+    command: sh -c "flask db upgrade && flask run --host=0.0.0.0 --port=5000 --reload"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:5000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  mysql_data:
