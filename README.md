@@ -11,6 +11,16 @@
 
 A full-stack **URL shortening service** with real-time click analytics. Built with Flask (backend) and Vue 3 (frontend).
 
+## 📸 Screenshots
+
+**Dashboard**: shorten links, see totals, manage your links
+
+![Shorty dashboard](docs/screenshots/dashboard.png)
+
+**Per-link analytics**: clicks over time, device breakdown and top referrers
+
+![Shorty link analytics](docs/screenshots/analytics.png)
+
 ## 🎯 Features
 
 - **URL Shortening**: Generate short, memorable links
